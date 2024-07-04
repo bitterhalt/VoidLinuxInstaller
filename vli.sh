@@ -622,26 +622,6 @@ End
     done
   fi
 
-  echo -e -n "\nConfiguring AppArmor and setting it to enforce...\n"
-  sed -i "/APPARMOR=/s/.*/APPARMOR=enforce/" /etc/default/apparmor
-  sed -i "/#write-cache/s/^#//" /etc/apparmor/parser.conf
-  sed -i "/#show_notifications/s/^#//" /etc/apparmor/notify.conf
-  if [[ $bootloader =~ $regex_EFISTUB ]]; then
-    sed -i "/OPTIONS=/s/\"$/ apparmor=1 security=apparmor&/" /etc/default/efibootmgr-kernel-hook
-    echo -e -n "\nReconfiguring kernel...\n\n"
-    kernelver_pre=$(ls /lib/modules/)
-    kernelver=$(echo ${kernelver_pre%.*})
-    xbps-reconfigure -f linux"$kernelver"
-  elif [[ $bootloader =~ $regex_GRUB2 ]]; then
-    sed -i "/GRUB_CMDLINE_LINUX_DEFAULT=/s/\"$/ apparmor=1 security=apparmor&/" /etc/default/grub
-    echo -e -n "\nUpdating grub...\n\n"
-    update-grub
-  fi
-
-  echo
-  press_any_key_to_continue
-  clear
-
 }
 
 function header_cs {
@@ -2436,7 +2416,7 @@ function format_create_install_system {
             kill_script
           fi
           if ! XBPS_ARCH="$ARCH" xbps-install -Suvy -r /mnt -R "$REPO" base-system btrfs-progs cryptsetup grub-x86_64-efi \
-            efibootmgr lvm2 grub-btrfs grub-btrfs-runit NetworkManager bash-completion nano gcc apparmor git curl \
+            efibootmgr lvm2 grub-btrfs grub-btrfs-runit NetworkManager bash-completion nano gcc git curl \
             util-linux tar coreutils binutils xtools fzf xmirror plocate ictree xkeyboard-config ckbcomp void-repo-nonfree; then
             echo -e -n "\n${RED_LIGHT}Something went wrong, killing script...${NORMAL}\n\n"
             kill_script
