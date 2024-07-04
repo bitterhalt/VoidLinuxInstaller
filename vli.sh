@@ -637,7 +637,7 @@ function create_swapfile {
   while true; do
 
     header_cs
-    echo -e -n "\nDo you want to create a ${BLUE_LIGHT}swapfile${NORMAL} in ${BLUE_LIGHT}/var/swap/${NORMAL} btrfs subvolume?\nThis will also enable ${BLUE_LIGHT}zswap${NORMAL}, a cache in RAM for swap.\nA swapfile is needed if you plan to use hibernation (y/n): "
+    echo -e -n "\nDo you want to create a ${BLUE_LIGHT}swapfile${NORMAL} in ${BLUE_LIGHT}/swap/${NORMAL} btrfs subvolume?\nA swapfile is needed if you plan to use hibernation (y/n): "
     read -r yn
 
     if [[ $yn =~ $regex_YES ]]; then
@@ -648,7 +648,7 @@ function create_swapfile {
         clear
         header_cs
         echo -e -n "\nYour system has ${BLUE_LIGHT}${ram_size}GB${NORMAL} of RAM.\n"
-        echo -e -n "\nPress [ENTER] to create a swapfile of the same dimensions or choose the desired size in GB (numbers only): "
+        echo -e -n "\nPress [ENTER] to create a swapfile of the same size or choose the desired size in GB (numbers only): "
         read -r swap_size
 
         if [[ -z "$swap_size" ]] || [[ "$swap_size" -gt "0" ]]; then
@@ -656,7 +656,7 @@ function create_swapfile {
             swap_size=$ram_size
           fi
           echo -e -n "\nA swapfile of ${BLUE_LIGHT}${swap_size}GB${NORMAL} will be created in ${BLUE_LIGHT}/swap/${NORMAL} btrfs subvolume...\n\n"
-          btrfs filesystem mkswapfile /swap/swapfile --size "${swap_size}"G
+          btrfs filesystem mkswapfile --size "${swap_size}G" /swap/swapfile
           mkswap --label SwapFile /swap/swapfile
           swapon /swap/swapfile
           RESUME_UUID=$(findmnt -no UUID -T /swap/swapfile)
@@ -666,27 +666,23 @@ function create_swapfile {
           elif [[ $bootloader =~ $regex_GRUB2 ]]; then
             sed -i "/GRUB_CMDLINE_LINUX_DEFAULT=/s/\"$/ resume=UUID=$RESUME_UUID resume_offset=$RESUME_OFFSET&/" /etc/default/grub
           fi
-          echo -e -n "\n# Swap Subvolume\nUUID=$ROOT_UUID /swap $(blkid --match-tag TYPE --output value "$final_drive") $BTRFS_OPT,subvol=@swap 0 2\n" >>/etc/fstab
+          echo -e -n "\n# Swap Subvolume\nUUID=$ROOT_UUID /swap $(blkid --match-tag TYPE --output value "$final_drive") $BTRFS_OPT,subvol=@swap 0 0\n" >>/etc/fstab
           echo -e -n "\n# SwapFile\n/swap/swapfile none swap sw 0 0\n" >>/etc/fstab
-          echo -e -n "\nEnabling zswap...\n"
-          echo "add_drivers+=\" lz4hc lz4hc_compress z3fold \"" >>/etc/dracut.conf.d/40-add_zswap_drivers.conf
           echo -e -n "\nRegenerating dracut initramfs...\n\n"
           press_any_key_to_continue
           echo
           dracut --regenerate-all --force --hostonly
           if [[ $bootloader =~ $regex_EFISTUB ]]; then
-            sed -i "/OPTIONS=/s/\"$/ zswap.enabled=1 zswap.max_pool_percent=25 zswap.compressor=lz4hc zswap.zpool=z3fold&/" /etc/default/efibootmgr-kernel-hook
             echo -e -n "\nReconfiguring kernel...\n\n"
             kernelver_pre=$(ls /lib/modules/)
             kernelver=$(echo ${kernelver_pre%.*})
             xbps-reconfigure -f linux"$kernelver"
           elif [[ $bootloader =~ $regex_GRUB2 ]]; then
-            sed -i "/GRUB_CMDLINE_LINUX_DEFAULT=/s/\"$/ zswap.enabled=1 zswap.max_pool_percent=25 zswap.compressor=lz4hc zswap.zpool=z3fold&/" /etc/default/grub
             echo -e -n "\nUpdating grub...\n\n"
             update-grub
           fi
           swapoff --all
-          echo -e -n "\n${GREEN_LIGHT}Swapfile successfully created and zswap successfully enabled.${NORMAL}\n\n"
+          echo -e -n "\n${GREEN_LIGHT}Swapfile successfully created.${NORMAL}\n\n"
           press_any_key_to_continue
           clear
           break 2
@@ -713,7 +709,6 @@ function create_swapfile {
   done
 
 }
-
 function header_cu {
 
   echo -e -n "${GREEN_DARK}#######################################${NORMAL}\n"
