@@ -2366,7 +2366,7 @@ function format_create_install_system {
           mount -o "$BTRFS_OPT",subvol=@home "$final_drive" /mnt/home/
           mkdir /mnt/swap
           mount -o "$BTRFS_OPT",subvol=@swap "$final_drive" /mnt/swap/
-          mkdir /mnt/var/log
+          mkdir -p /mnt/var/log
           mount -o "$BTRFS_OPT",subvol=@log "$final_drive" /mnt/var/log/
           mkdir -p /mnt/var/cache
           mount -o "$BTRFS_OPT",subvol=@cache "$final_drive" /mnt/var/cache/
