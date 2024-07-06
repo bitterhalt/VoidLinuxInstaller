@@ -209,8 +209,7 @@ UUID=$ROOT_UUID /home $(blkid --match-tag TYPE --output value "$final_drive") $B
 # Some applications don't like to have /var/log folders as read only.
 # Log folders, to allow booting snapshots with rd.live.overlay.overlayfs=1
 UUID=$ROOT_UUID /var/log $(blkid --match-tag TYPE --output value "$final_drive") $BTRFS_OPT,subvol=@log 0 0
-UUID=$ROOT_UUID /var/cache $(blkid --match-tag TYPE --output value "$final_drive") $BTRFS_OPT,subvol=@cache 0 0
-UUID=$ROOT_UUID /var/tmp $(blkid --match-tag TYPE --output value "$final_drive") $BTRFS_OPT,subvol=@tmp 0 0
+UUID=$ROOT_UUID /var/cache/xbps $(blkid --match-tag TYPE --output value "$final_drive") $BTRFS_OPT,subvol=@cache 0 0
 
 # TMPfs
 tmpfs /tmp tmpfs defaults,noatime,mode=1777 0 0
@@ -2332,7 +2331,6 @@ function format_create_install_system {
           echo -e -n "- /@snapshots\n"
           echo -e -n "- /@swap\n"
           echo -e -n "- /@cache\n"
-          echo -e -n "- /@tmp\n"
           echo -e -n "- /@log\n\n"
 
           press_any_key_to_continue
@@ -2359,7 +2357,6 @@ function format_create_install_system {
           btrfs subvolume create /mnt/@swap
           btrfs subvolume create /mnt/@log
           btrfs subvolume create /mnt/@cache
-          btrfs subvolume create /mnt/@tmp
           umount /mnt
           mount -o "$BTRFS_OPT",subvol=@ "$final_drive" /mnt
           mkdir /mnt/home
@@ -2368,10 +2365,8 @@ function format_create_install_system {
           mount -o "$BTRFS_OPT",subvol=@swap "$final_drive" /mnt/swap/
           mkdir -p /mnt/var/log
           mount -o "$BTRFS_OPT",subvol=@log "$final_drive" /mnt/var/log/
-          mkdir -p /mnt/var/cache
-          mount -o "$BTRFS_OPT",subvol=@cache "$final_drive" /mnt/var/cache/
-          mkdir -p /mnt/var/tmp
-          mount -o "$BTRFS_OPT",subvol=@tmp "$final_drive" /mnt/var/tmp/
+          mkdir -p /mnt/var/cache/xbps
+          mount -o "$BTRFS_OPT",subvol=@cache "$final_drive" /mnt/var/cache/xbps/
 
           echo -e -n "\n${GREEN_LIGHT}Done.${NORMAL}\n\n"
           press_any_key_to_continue
